@@ -23,7 +23,7 @@ int treeAtom(List *lp, FormTree *t);
 int treeLiteral(List *lp, FormTree *t);
 int treeFormula(List *lp, FormTree *t);
 
-int treeFormulaOr (List *lp, FormTree *t);
+int treeImplication (List *lp, FormTree *t);
 
 void treeFormulas();
 

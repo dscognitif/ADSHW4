@@ -103,7 +103,8 @@ int treeFormula(List *lp, FormTree *t) {
   if ( !treeLiteral(lp,t) ) {
     return 0;
   }
-  while ( acceptCharacter(lp,'&') ) {
+  
+  if (acceptCharacter(lp, '&')) {
     FormTree tL = *t;
     FormTree tR = NULL;
     if ( !treeLiteral(lp,&tR) ) {
@@ -113,15 +114,28 @@ int treeFormula(List *lp, FormTree *t) {
     Token tok;
     tok.symbol = '&';
     *t = newFormTreeNode(Symbol, tok, tL, tR);
-  } /* no '&', so we reached the end of conjunction */
+  }
+
+  if (acceptCharacter(lp, '|')) {
+    FormTree tL = *t;
+    FormTree tR = NULL;
+    if ( !treeLiteral(lp,&tR) ) {
+      freeTree(tR);
+      return 0;
+    }
+    Token tok;
+    tok.symbol = '|';
+    *t = newFormTreeNode(Symbol, tok, tL, tR);
+    } /* no '&', so we reached the end of conjunction */
   return 1;
 }
 
-int treeFormulaOr(List *lp, FormTree *t) {
+/*
+int treeFormula(List *lp, FormTree *t) {
   if ( !treeFormula(lp,t) ) {
     return 0;
   }
-  while (acceptCharacter(lp,'|') ) {
+  while (acceptCharacter(lp,'&') ) {
     FormTree tL = *t;
     FormTree tR = NULL;
     if ( !treeFormula(lp,&tR) ) {
@@ -129,9 +143,29 @@ int treeFormulaOr(List *lp, FormTree *t) {
       return 0;
     }
     Token tok;
-    tok.symbol = '|';
+    tok.symbol = '&';
     *t = newFormTreeNode(Symbol, tok, tL, tR);
-  } /* no '|', so we reached the end of disjunction */
+  } // no '|', so we reached the end of disjunction 
+  return 1;
+}
+*/
+
+
+int treeImplication(List *lp, FormTree *t) {
+  if ( !treeLiteral(lp,t) ) {
+    return 0;
+  }
+  if (acceptCharacter(lp, '-')) {
+    FormTree tL = *t;
+    FormTree tR = NULL;
+    if ( !treeLiteral(lp,&tR) ) {
+      freeTree(tR);
+      return 0;
+    }
+    Token tok;
+    tok.symbol = '-';
+    *t = newFormTreeNode(Symbol, tok, tL, tR);
+  }
   return 1;
 }
 
