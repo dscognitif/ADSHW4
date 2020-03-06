@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     printList(tl);
     tl1 = tl;
     FormTree t = NULL;
-    if ( treeFormula(&tl1,&t) && tl1 == NULL ) {
+    if (treeFormula(&tl1,&t) && treeImplication(&tl1, &t) && tl1 == NULL ) {
       printf("with parentheses: ");
       printTree(t);
       printf("\n");
