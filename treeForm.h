@@ -21,9 +21,14 @@ FormTree newFormTreeNode(TokenType tt, Token t, FormTree tL, FormTree tR);
 int treeIdentifier(List *lp, FormTree *t);
 int treeAtom(List *lp, FormTree *t);
 int treeLiteral(List *lp, FormTree *t);
-int treeFormula(List *lp, FormTree *t);
 
+
+int treeConjunction(List *lp, FormTree *t);
+int treeDisjunction(List *lp, FormTree *t);
 int treeImplication (List *lp, FormTree *t);
+int treeBiconditional(List *lp, FormTree *t);
+
+int complexityTree(FormTree t);
 
 void treeFormulas();
 

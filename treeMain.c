@@ -15,11 +15,15 @@ int main(int argc, char *argv[]) {
     printList(tl);
     tl1 = tl;
     FormTree t = NULL;
-    if (treeFormula(&tl1,&t) && treeImplication(&tl1, &t) && tl1 == NULL ) {
-      printf("with parentheses: ");
-      printTree(t);
-      printf("\n");
-      freeTree(t);
+    if (treeBiconditional(&tl1,&t) && tl1 == NULL ) {
+			printf("with parentheses: ");
+			printTree(t);
+			printf("\n");
+			printf("complexity: ");
+			int complexity = complexityTree(t) - 1;
+			printf("%d", complexity);
+			printf("\n");
+			freeTree(t);
     } else {
       printf("this is not a formula\n");
       if (t != NULL) {

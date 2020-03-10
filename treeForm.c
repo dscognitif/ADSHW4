@@ -74,7 +74,7 @@ int treeAtom(List *lp, FormTree *t) {
   if (treeIdentifier(lp,t)) {
     return 1;
   }
-  if (acceptCharacter(lp,'(') && treeFormula(lp,t) && acceptCharacter(lp,')') ) {
+  if (acceptCharacter(lp,'(') && treeBiconditional(lp,t) && acceptCharacter(lp,')') ) {
     return 1;
   }
   return 0;
@@ -98,13 +98,12 @@ int treeLiteral(List *lp, FormTree *t) {
   return 0;
 }
 
-// <formula>  ::=  <literal> { '&' <literal> }
-int treeFormula(List *lp, FormTree *t) {
-  if ( !treeLiteral(lp,t) ) {
+
+int treeConjunction(List *lp, FormTree *t) {
+  if (!treeLiteral(lp,t) ) {
     return 0;
   }
-  
-  if (acceptCharacter(lp, '&')) {
+  while (acceptCharacter(lp,'&') ) {
     FormTree tL = *t;
     FormTree tR = NULL;
     if ( !treeLiteral(lp,&tR) ) {
@@ -114,81 +113,66 @@ int treeFormula(List *lp, FormTree *t) {
     Token tok;
     tok.symbol = '&';
     *t = newFormTreeNode(Symbol, tok, tL, tR);
+  } // no '&', so we reached the end of disjunction 
+  return 1;
+}
 
-    while (acceptCharacter(lp, '&')) {
-      FormTree tL = *t;
-      FormTree tR = NULL;
-      if ( !treeLiteral(lp,&tR) ) {
-        freeTree(tR);
-        return 0;
-      }
-      Token tok;
-      tok.symbol = '&';
-      *t = newFormTreeNode(Symbol, tok, tL, tR);
-      }
+int treeDisjunction(List *lp, FormTree *t) {
+  if ( !treeConjunction(lp,t) ) {
+    return 0;
   }
-
-  if (acceptCharacter(lp, '|')) {
+  while (acceptCharacter(lp,'|') ) {
     FormTree tL = *t;
     FormTree tR = NULL;
-    if ( !treeLiteral(lp,&tR) ) {
+    if ( !treeConjunction(lp,&tR) ) {
       freeTree(tR);
       return 0;
     }
     Token tok;
     tok.symbol = '|';
     *t = newFormTreeNode(Symbol, tok, tL, tR);
-    }
-
-    while (acceptCharacter(lp, '|')) {
-      FormTree tL = *t;
-      FormTree tR = NULL;
-      if ( !treeLiteral(lp,&tR) ) {
-        freeTree(tR);
-        return 0;
-      }
-      Token tok;
-      tok.symbol = '|';
-      *t = newFormTreeNode(Symbol, tok, tL, tR);
-      }
-  return 1;
-}
-
-/*
-int treeFormula(List *lp, FormTree *t) {
-  if ( !treeFormula(lp,t) ) {
-    return 0;
-  }
-  while (acceptCharacter(lp,'&') ) {
-    FormTree tL = *t;
-    FormTree tR = NULL;
-    if ( !treeFormula(lp,&tR) ) {
-      freeTree(tR);
-      return 0;
-    }
-    Token tok;
-    tok.symbol = '&';
-    *t = newFormTreeNode(Symbol, tok, tL, tR);
   } // no '|', so we reached the end of disjunction 
   return 1;
 }
-*/
-
 
 int treeImplication(List *lp, FormTree *t) {
-  if (!treeFormula(lp,t) ) {
+  if (!treeDisjunction(lp,t) ) {
     return 0;
   }
   if (acceptCharacter(lp, '-')) {
-      FormTree tL = *t;
-      FormTree tR = NULL;
-      if (!treeImplication(lp,&tR) ) {
-        freeTree(tR);
-        return 0;
-    }
-    Token tok;
-    tok.symbol = '-';
-    *t = newFormTreeNode(Symbol, tok, tL, tR);
+	if (acceptCharacter(lp, '>')) {
+		FormTree tL = *t;
+		FormTree tR = NULL;
+		if (!treeDisjunction(lp,&tR) ) {
+			freeTree(tR);
+			return 0;
+		}
+		Token tok;
+		tok.symbol = '-';
+		*t = newFormTreeNode(Symbol, tok, tL, tR);
+	}
+  }
+  return 1;
+}
+
+int treeBiconditional(List *lp, FormTree *t) {
+  if (!treeImplication(lp,t) ) {
+    return 0;
+  }
+  if (acceptCharacter(lp, '<')) {
+	if (acceptCharacter(lp, '-')) {
+		if (acceptCharacter(lp, '>')) {
+			FormTree tL = *t;
+			FormTree tR = NULL;
+			if (!treeImplication(lp,&tR) ) {
+				freeTree(tR);
+				return 0;
+			}
+			Token tok;
+			tok.symbol = '<';
+			*t = newFormTreeNode(Symbol, tok, tL, tR);
+		}
+	}
   }
   return 1;
 }
@@ -210,6 +194,20 @@ void printTree(FormTree t) {
       printTree(t->left);
       printf(")");
       break;
+    case '-':
+	  printf("(");
+	  printTree(t->left);
+      printf(" -> ");
+      printTree(t->right);
+      printf(")");
+      break;
+    case '<':
+	  printf("(");
+	  printTree(t->left);
+      printf(" <-> ");
+      printTree(t->right);
+      printf(")");
+      break;
     default:
       printf("(");
       printTree(t->left);
@@ -224,3 +222,26 @@ void printTree(FormTree t) {
     break;
   }
 }
+
+
+/* Complexity function adapted from:
+ https://www.geeksforgeeks.org/write-a-c-program-to-find-the-maximum-depth-or-height-of-a-tree/ */
+
+/* Finds the complexity of the tree by finding the maximum depth */
+int complexityTree(FormTree t) { 
+   if (t == NULL) { 
+       return 0; 
+   }
+   else { 
+       /* compute the depth of each subtree */
+		int leftDepth = complexityTree(t->left); 
+		int rightDepth = complexityTree(t->right); 
+  
+       /* use the larger one */
+		if (leftDepth > rightDepth) {
+			return (leftDepth+1);
+		} else {
+			return (rightDepth+1);
+		}
+   }
+} 
